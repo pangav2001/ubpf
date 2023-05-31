@@ -38,7 +38,7 @@ int xdp_standard_acl(void *ctx, size_t len)
     /* Don't inspect packet if it's not an IPv4 or IPv6 packet */
     if (eth->h_proto == bpf_htons(ETH_P_IP) || eth->h_proto == bpf_htons(ETH_P_IPV6))
     {
-        _Bool permitted_src;
+        __u32 permitted_src;
         if (eth->h_proto == bpf_htons(ETH_P_IP))
         {
             struct iphdr *iph;
@@ -59,7 +59,7 @@ int xdp_standard_acl(void *ctx, size_t len)
                     .prefixlen = 32,
                     .data = src_ip
             };
-            permitted_src = (_Bool *)bpf_map_lookup_elem(&ipv4_rules_trie, &key);
+            permitted_src = (__u32)bpf_map_lookup_elem(&ipv4_rules_trie, &key);
         }
         else
         {
@@ -81,11 +81,11 @@ int xdp_standard_acl(void *ctx, size_t len)
                     .prefixlen = 128,
                     .data = &src_ip
             };
-            permitted_src = (_Bool *)bpf_map_lookup_elem(&ipv6_rules_trie, &key);
+            permitted_src = (__u32)bpf_map_lookup_elem(&ipv6_rules_trie, &key);
         }
 
         /* Implicit "DENY ANY" at end of list*/
-        return permitted_src ? XDP_PASS : XDP_DROP;
+        return (permitted_src) ? XDP_PASS : XDP_DROP;
     }
 
     /* Allow the packet if not IPv4/IPv6 packet */
